@@ -34,6 +34,15 @@ func (r RollingWindow) StdDev() (s Series) {
 	return
 }
 
+// Apply - returns the rolling calculation of the given closure
+func (r RollingWindow) Apply(fn func(Series) interface{}) (s Series) {
+	s = New([]float64{}, Float, "StdDev")
+	for _, block := range r.getBlocks() {
+		s.Append(fn(block))
+	}
+	return
+}
+
 func (r RollingWindow) getBlocks() (blocks []Series) {
 	for i := 1; i <= r.series.Len(); i++ {
 		if i < r.window {
