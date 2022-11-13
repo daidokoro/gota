@@ -83,3 +83,46 @@ func TestSeries_RollingStdDev(t *testing.T) {
 		}
 	}
 }
+
+func TestSeries_RollingApply(t *testing.T) {
+	tests := []struct {
+		window   int
+		series   Series
+		expected Series
+	}{
+		{
+			3,
+			Ints([]int{5, 5, 6, 7, 5, 5, 5}),
+			Floats([]float64{math.NaN(), math.NaN(), 5, 5, 5}),
+		},
+		{
+			2,
+			Floats([]float64{1.0, 2.0, 3.0}),
+			Floats([]float64{math.NaN(), 1.0, 2.0}),
+		},
+		{
+			0,
+			Floats([]float64{}),
+			Floats([]float64{}),
+		},
+	}
+
+	for testnum, test := range tests {
+		expected := test.expected
+		received := test.series.Rolling(test.window).
+			Apply(func(s Series) interface{} {
+				// rolling min value
+				return s.Min()
+			})
+
+		for i := 0; i < expected.Len(); i++ {
+			if strings.Compare(expected.Elem(i).String(),
+				received.Elem(i).String()) != 0 {
+				t.Errorf(
+					"Test:%v\nExpected:\n%v\nReceived:\n%v",
+					testnum, expected, received,
+				)
+			}
+		}
+	}
+}
